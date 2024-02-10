@@ -1,0 +1,867 @@
+﻿<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="css/profile.css" rel="stylesheet" />
+    <Title>Home</Title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+
+
+    <script>
+        $(document).ready(function () {
+            if (localStorage.getItem("userInfo") === null) {
+                console.log("Signed in as guest")
+            } else {
+                const CurrentUserInfo = localStorage.getItem("userInfo")
+
+                const userJsonData = JSON.parse(CurrentUserInfo)
+
+                console.log(JSON.stringify(userJsonData))
+                console.log(`Current user's role: ${JSON.stringify(userJsonData)}`)
+
+                if (userJsonData[0].role == "admin") {
+                    alert(`Welcome back, ${userJsonData[0].first_name} ${userJsonData[0].last_name}`)
+                    let divOuput = ''
+                    divOuput += `<button id="AdminPanel">Admin Panel</button>`
+                    $('#admin').html(divOuput)
+
+                } else {
+                    console.log("Logged in as staff.")
+                }
+            }
+            // fill dropdown box with category names
+            $.ajax({
+                url: 'http://localhost:8081/film/categories',
+                type: 'GET',
+
+                success: function (data, textStatus, xhr) {
+                    console.log(`Server : ${JSON.stringify(data)}`)
+                    console.log(data)
+                    if (data != 'null') {
+                        console.log("Get ALL DVD")
+
+                        console.log(JSON.stringify(data))
+
+
+
+                        let divOuput = ''
+                        divOuput += `<option selected></option>`
+                        for (let i = 0; i < data.length; i++) {
+                            divOuput += `<option value=\"${i + 1}\">${data[i].name}<option>`
+                        }
+
+
+
+                        $('#DVDCatSelect').html(divOuput)
+                    }
+
+                },
+                error: function (xhr, textStatus, error) {
+                    alert("Get Categories failed")
+                    console.log('Error in Operation')
+                }
+            })
+
+
+            // $('button').click(function () {
+            //     $('.card').slideToggle()
+            // })
+            // populate user info into the form
+
+            // get user info from localStorage
+
+            // const UserData = localStorage.getItem('userInfo')
+
+
+            // // convert userinfo to json format
+            // const userJsonData = JSON.parse(UserData)
+
+            // // populate userjsondata into the form
+            // $('#username').val(userJsonData[0].username)
+            // $('#email').val(userJsonData[0].email)
+            // $('#role').val(userJsonData[0].role)
+            // $('#profilepic').attr('src', 'image/' + userJsonData[0].pic)
+
+            //handle the click event of Update Button
+            $(document).on('click', '#Update', function () {
+                // retrieve values from textbox
+
+                const tmpUsername = $('#username').val()
+                const tmpEmail = $('#email').val()
+                const tmpRole = $('#role').val()
+
+                // retrieve token from localStorage
+                const tmpToken = localStorage.getItem('token')
+
+
+
+                const dataObj = {
+                    username: tmpUsername,
+                    email: tmpEmail,
+                    role: tmpRole
+
+                }
+
+                const data = JSON.stringify(dataObj)
+
+                console.log(data)
+                // send put req
+                $.ajax({
+                    headers: { 'authorization': 'Bearer ' + tmpToken },
+                    url: 'http://localhost:8081/user',
+                    type: 'PUT',
+                    data: data,
+                    contentType: 'application/json;charset=utf-8',
+                    dataType: 'json',
+
+                    success: function (data, textStatus, xhr) {
+                        alert('success')
+                        if (data != null) {
+                            $('#msg').html('Record updated successfully.')
+
+                        } else {
+                            $('#msg').html('Record not successfully.')
+
+                        }
+                        // alert(JSON.stringify(data))
+                        // alert(textStatus)
+                        // alert(JSON.stringify(xhr))
+                    },
+
+                    error: function (xhr, textStatus, errorThrown) {
+                        alert('error')
+                        console.log("Error in operation")
+                        // alert(JSON.stringify(data))
+                        // alert(textStatus)
+                        // alert(JSON.stringify(xhr))
+                    }
+                })
+
+                return false // prevents page from reloading
+
+
+
+            })
+
+
+            // reroutes
+
+            //logout
+            $(document).on('click', '#Logout', function () {
+                window.localStorage.clear()
+                window.location.assign('http://localhost:3001/login.html')
+            })
+
+            // go to my cart
+            $(document).on('click', '#MyCart', function () {
+                window.location.assign('http://localhost:3001/MyCart.html')
+            })
+
+
+            // needs delegation
+            // $("#ViewDVD").click(function () {
+            //     var title = $(this).siblings(".card-body").find("#dataTitle").text();
+
+            //     alert(`Stored search query for : ${title}`)
+            //     localStorage.setItem("dvdTitle", title);
+            // });
+            
+
+            $(document).on('click', '#SearchBtn', function () {
+                // to handle delegation
+                // instead of doing ${#ID}.click(function()), do ${document}.on('click')....
+                // because events dont mount on dynamically created buttons, thus do this
+
+                // reset search after every click
+                let divOuput = ''
+                $('#DVDOutput').html(divOuput)
+
+                console.log("Clicked search")
+
+
+                const title = $('#SearchDVDInput').val().toUpperCase()
+                const price = $('#DVDMaxPrice').val()
+                const category = $('#DVDCatSelect').find(":selected").text();
+
+                console.log(`Title : ${title} , Price : ${price} , Selected Category : ${category}`)
+
+                const dataObj = {
+                    "title": title,
+                }
+
+                const dataQuery = JSON.stringify(dataObj)
+                //alert(dataQuery)
+
+                if (title !== "" || price !== "" || category !== "") {
+                    alert("Loading..")
+                    $.ajax({
+                        url: 'http://localhost:8081/films/search',
+                        type: 'GET',
+
+
+                        success: function (data, textStatus, xhr) {
+                            console.log(data)
+                            // alert(`Server : ${JSON.stringify(data)}`)
+                            // alert(data)
+
+                            if (data != 'null') {
+                                //alert("Get ALL DVD")
+
+
+
+
+
+
+
+                                // search matching query
+                                for (var i = 0; i < data.length; i++) {
+                                    console.log(data[i].title.includes(title))
+
+                                    // if has input with price
+                                    if (title != '' && category == '' && price != '') {
+                                        if (data[i].title.includes(title) && data[i].rental_rate < price) {
+                                            //     alert(data[i].name + "match!")
+                                            divOuput += `
+                                <div class="card" style="margin-top: 2rem;" id=${data[i].title}>
+                                    <div class="card-body">
+                                        <p class="card-text" id="dataTitle" data-value="firstvalue">${data[i].title}</p>
+                                    </div>
+
+                                    <div class="card-footer text-muted">
+                                        <div class="row">
+                                        
+                                            <div class="col">
+                                                Category
+                                                <div class="col">
+                                                ${data[i].category}
+                                                </div>
+                                            </div>
+                                            
+
+                                            <div class="col">
+                                                Rating
+                                                <div class="col">
+                                                ${data[i].rating}
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                Release Year
+                                                <div class="col">
+                                                ${data[i].release_year}
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                Duration
+                                                <div class="col">
+                                                ${data[i].duration} Minutes
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                Price
+                                                <div class="col">
+                                                ${data[i].rental_rate}
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+                                        
+                                    </div>
+
+                                    <div class="card-footer text-muted">
+                                        <a class="btn btn-primary" id="ViewDVD" data-title="${data[i].title}">View</a>
+                                        <a class="btn btn-primary" id="AddDVDtoCart" data-title="${data[i].title}">Add to cart</a>
+                                    </div>
+                                </div>
+                                `
+
+
+                                            $('#DVDOutput').html(divOuput)
+
+                                        }
+                                    }
+                                    else if (category != '' && title == '' && price != '') {
+                                        if (data[i].category.includes(category) && data[i].rental_rate < price) {
+                                            //     alert(data[i].name + "match!")
+                                            divOuput += `
+                                <div class="card" style="margin-top: 2rem;">
+                                    <div class="card-body">
+                                        <p class="card-text" id="dataTitle">${data[i].title}</p>
+                                    </div>
+
+                                    <div class="card-footer text-muted">
+                                        <div class="row">
+                                        
+                                            <div class="col">
+                                                Category
+                                                <div class="col">
+                                                ${data[i].category}
+                                                </div>
+                                            </div>
+                                            
+
+                                            <div class="col">
+                                                Rating
+                                                <div class="col">
+                                                ${data[i].rating}
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                Release Year
+                                                <div class="col">
+                                                ${data[i].release_year}
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                Duration
+                                                <div class="col">
+                                                ${data[i].duration} Minutes
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                Price
+                                                <div class="col">
+                                                ${data[i].rental_rate}
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+                                        
+                                    </div>
+
+                                    <div class="card-footer text-muted">
+                                        <a class="btn btn-primary" id="ViewDVD" data-title="${data[i].title}">View</a>
+                                        <a class="btn btn-primary" id="AddDVDtoCart" data-title="${data[i].title}">Add to cart</a>
+                                    </div>
+                                </div>
+                                `
+
+
+                                            $('#DVDOutput').html(divOuput)
+
+                                        }
+                                    }
+                                    // if has input with no price
+                                    else if (title != '' && price == '' && category == '') {
+                                        if (data[i].title.includes(title)) {
+                                            //     alert(data[i].name + "match!")
+                                            divOuput += `
+                                <div class="card" style="margin-top: 2rem;">
+                                    <div class="card-body">
+                                        <p class="card-text" id="dataTitle">${data[i].title}</p>
+                                    </div>
+
+                                    <div class="card-footer text-muted">
+                                        <div class="row">
+                                        
+                                            <div class="col">
+                                                Category
+                                                <div class="col">
+                                                ${data[i].category}
+                                                </div>
+                                            </div>
+                                            
+
+                                            <div class="col">
+                                                Rating
+                                                <div class="col">
+                                                ${data[i].rating}
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                Release Year
+                                                <div class="col">
+                                                ${data[i].release_year}
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                Duration
+                                                <div class="col">
+                                                ${data[i].duration} Minutes
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                Price
+                                                <div class="col">
+                                                ${data[i].rental_rate}
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+                                        
+                                    </div>
+
+                                    <div class="card-footer text-muted">
+                                        <a class="btn btn-primary" id="ViewDVD" data-title="${data[i].title}">View</a>
+                                        <a class="btn btn-primary" id="AddDVDtoCart" data-title="${data[i].title}">Add to cart</a>
+                                    </div>
+                                </div>
+                                `
+
+
+                                            $('#DVDOutput').html(divOuput)
+
+                                        }
+                                    }
+                                    else if (category != '' && price == '' && title == '') {
+                                        if (data[i].category.includes(category)) {
+                                            //     alert(data[i].name + "match!")
+                                            divOuput += `
+                                <div class="card" style="margin-top: 2rem;">
+                                    <div class="card-body">
+                                        <p class="card-text">${data[i].title}</p>
+                                    </div>
+
+                                    <div class="card-footer text-muted">
+                                        <div class="row">
+                                        
+                                            <div class="col">
+                                                Category
+                                                <div class="col">
+                                                ${data[i].category}
+                                                </div>
+                                            </div>
+                                            
+
+                                            <div class="col">
+                                                Rating
+                                                <div class="col">
+                                                ${data[i].rating}
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                Release Year
+                                                <div class="col">
+                                                ${data[i].release_year}
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                Duration
+                                                <div class="col">
+                                                ${data[i].duration} Minutes
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                Price
+                                                <div class="col">
+                                                ${data[i].rental_rate}
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+                                        
+                                    </div>
+
+                                    <div class="card-footer text-muted">
+                                        <a class="btn btn-primary" id="ViewDVD" data-title="${data[i].title}">View</a>
+                                        <a class="btn btn-primary" id="AddDVDtoCart" data-title="${data[i].title}">Add to cart</a>
+                                    </div>
+                                </div>
+                                `
+
+
+                                            $('#DVDOutput').html(divOuput)
+
+                                        }
+                                    }
+
+                                    // if all inputs 
+                                    else {
+                                        if (price != '') {
+                                            if (data[i].title.includes(title) && data[i].category.includes(category) && data[i].rental_rate < price) {
+
+                                                //     alert(data[i].name + "match!")
+                                                divOuput += `
+                                <div class="card" style="margin-top: 2rem;">
+                                    <div class="card-body">
+                                        <p class="card-text">${data[i].title}</p>
+                                    </div>
+
+                                    <div class="card-footer text-muted">
+                                        <div class="row">
+                                        
+                                            <div class="col">
+                                                Category
+                                                <div class="col">
+                                                ${data[i].category}
+                                                </div>
+                                            </div>
+                                            
+
+                                            <div class="col">
+                                                Rating
+                                                <div class="col">
+                                                ${data[i].rating}
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                Release Year
+                                                <div class="col">
+                                                ${data[i].release_year}
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                Duration
+                                                <div class="col">
+                                                ${data[i].duration} Minutes
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                Price
+                                                <div class="col">
+                                                ${data[i].rental_rate}
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+                                        
+                                    </div>
+
+                                    <div class="card-footer text-muted">
+                                        <a class="btn btn-primary" id="ViewDVD" data-title="${data[i].title}">View</a>
+                                        <a class="btn btn-primary" id="AddDVDtoCart" data-title="${data[i].title}">Add to cart</a>
+                                    </div>
+                                </div>
+                                `
+
+
+                                                $('#DVDOutput').html(divOuput)
+
+                                            } else {
+                                                if (data[i].title.includes(title) && data[i].category.includes(category)) {
+
+                                                    //     alert(data[i].name + "match!")
+                                                    divOuput += `
+                                <div class="card" style="margin-top: 2rem;">
+                                    <div class="card-body">
+                                        <p class="card-text">${data[i].title}</p>
+                                    </div>
+
+                                    <div class="card-footer text-muted">
+                                        <div class="row">
+                                        
+                                            <div class="col">
+                                                Category
+                                                <div class="col">
+                                                ${data[i].category}
+                                                </div>
+                                            </div>
+                                            
+
+                                            <div class="col">
+                                                Rating
+                                                <div class="col">
+                                                ${data[i].rating}
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                Release Year
+                                                <div class="col">
+                                                ${data[i].release_year}
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                Duration
+                                                <div class="col">
+                                                ${data[i].duration} Minutes
+                                                </div>
+                                            </div>
+
+                                            <div class="col">
+                                                Price
+                                                <div class="col">
+                                                ${data[i].rental_rate}
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+                                        
+                                    </div>
+
+                                    <div class="card-footer text-muted">
+                                        <a class="btn btn-primary" id="ViewDVD" data-title="${data[i].title}">View</a>
+                                        <a class="btn btn-primary" id="AddDVDtoCart" data-title="${data[i].title}">Add to cart</a>
+                                    </div>
+                                </div>
+                                `
+
+
+                                                    $('#DVDOutput').html(divOuput)
+
+                                                }
+                                            }
+                                        } else {
+                                            // if no query match
+                                            let divOuput = ''
+                                            $('#DVDOutput').html(divOuput)
+                                        }
+                                    }
+
+                                }
+
+
+
+
+                            }
+
+                        },
+                        error: function (xhr, textStatus, error) {
+                            alert("Get DVD failed")
+                            console.log('Error in Operation')
+                        }
+
+
+                    })
+                } else {
+                    alert("Please input fields of search.")
+                    let divOuput = ''
+                    $('#DVDOutput').html(divOuput)
+                }
+                // On click of view, redirect to ViewDVD page
+                $(document).on('click', '#ViewDVD', function () {
+                    var title = $(this).attr("data-title");
+
+                    console.log(`Stored search query for : ${title}`)
+                    console.log(`Stored search query for : ${title}`)
+                    localStorage.setItem("dvdTitle", title);
+
+                    window.location.assign('http://localhost:3001/viewDVD.html')
+                });
+
+                $(document).on('click', '#AddDVDtoCart', function () {
+
+                    // add items to cart
+                    function addToCart(item) {
+                        let cart = localStorage.getItem("cart");
+                        if (cart == null) {
+                            cart = [];
+                        } else {
+                            cart = JSON.parse(cart);
+                        }
+                        cart.push(item);
+                        localStorage.setItem("cart", JSON.stringify(cart));
+                    }
+
+                    var title = $(this).attr("data-title");
+
+                    alert(`Added film to cart : ${title}`)
+                    console.log(`Added film to cart : ${title}`)
+
+                    addToCart(title)
+
+
+                })
+
+                return false // prevents page from reloading
+            })
+
+            $(document).on('click', '#AdminPanel', function () {
+                if (localStorage.getItem("userInfo") === null) {
+                    alert("You do not have permissions to access the admin panel!")
+                } else {
+                    const CurrentUserInfo = localStorage.getItem("userInfo")
+
+                    const userJsonData = JSON.parse(CurrentUserInfo)
+
+                    console.log(JSON.stringify(userJsonData))
+                    console.log(`Current user's role: ${JSON.stringify(userJsonData)}`)
+
+                    if (userJsonData[0].role == "admin") {
+                        alert(`Welcome back, ${userJsonData[0].first_name} ${userJsonData[0].last_name}`)
+                        window.location.assign('http://localhost:3001/AdminPanel.html')
+                    } else {
+                        alert("You have no permission to access the admin panel!")
+                    }
+                }
+            })
+
+        })
+    </script>
+
+</head>
+
+<body style="
+background-image: url('https://mdbcdn.b-cdn.net/img/Photos/Others/images/76.webp');
+
+background-repeat: no-repeat;
+  background-attachment: fixed;  
+  background-size: cover;
+">
+
+    <header class="header" class="sticky-top">
+
+        Sakila DVD Database System
+        <div class="container">
+            <div class="row">
+                <div class="col ">
+                    <button id="Logout">Log out</button>
+                </div>
+
+                <div class="col  border-bottom border-primary">
+                    <button id="SearchDVDBtn">Search DVD</button>
+                </div>
+
+                <div class="col ">
+                    <button id="MyCart">My Cart</button>
+                </div>
+
+                <div class="col " id="admin">
+
+                </div>
+                <!-- <div class="form-floating col">
+                    <textarea class="form-control" placeholder="Search" id="floatingTextarea"></textarea>
+                    <label for="floatingTextarea">Comments</label>
+                  </div> -->
+
+            </div>
+
+        </div>
+    </header>
+
+
+
+
+
+
+    <!-- Account Details -->
+    <!-- <div class="card col col-lg-2">
+        <img src="http://localhost:3001/image/pic.jpg" id="profilepic" alt="Profile" style="width:100%">
+
+
+        <div class="container">
+            <div class="col">
+                <p class="username row"> <label>Username: </label>
+                    <input type="text" id="username"> </br>
+                </p>
+                <p class="role row"><label>Job role: </label>
+                    <input type="text" id="role"> </br>
+                </p>
+
+                <p class="email row"><label>Email: </label>
+                    <input type="text" id="email">
+                </p>
+
+                <div class="row padding pb-3">
+                    <p><span id="msg"></span></p>
+                    <a href="#" class="col"><i class="fa fa-dribbble"></i></a>
+                    <a href="#" class="col"><i class="fa fa-twitter"></i></a>
+                    <a href="#" class="col"><i class="fa fa-linkedin"></i></a>
+                    <a href="#" class="col"><i class="fa fa-facebook"></i></a>
+
+                </div>
+
+                <p><input type="button" id="Update" class="row" value="Update Profile" /></p>
+                <p><input type="button" id="Logout" class="row" value="Log Out" /></p>
+
+            </div>
+
+
+
+
+        </div>
+
+
+
+    </div> -->
+
+    <div class="container mt-5">
+
+        <div class="row">
+
+            <div class="col ">
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                            fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                            <path
+                                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+                        </svg></span>
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="SearchDVDInput" placeholder="Username">
+                        <label for="floatingInputGroup1">Search DVD</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="form-floating">
+                    <select class="form-select" id="DVDCatSelect" aria-label="Floating label select example">
+
+                        <!-- <option selected></option>
+                        <option value="1">One</option>
+                        <option value="2">Two</option>
+                        <option value="3">Three</option> -->
+
+                        <!-- output for fill category -->
+
+
+                    </select>
+                    <label for="floatingSelect">Search by Category</label>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                            fill="currentColor" class="bi bi-currency-dollar" viewBox="0 0 16 16">
+                            <path
+                                d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718H4zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73l.348.086z" />
+                        </svg></span>
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="DVDMaxPrice" placeholder="Username">
+                        <label for="floatingInputGroup1">Max Price</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <button type="button" class="btn btn-primary" id="SearchBtn">Search</button>
+            </div>
+
+
+
+
+
+        </div>
+
+        <div class="row">
+            <div id="DVDOutput" class="row">
+
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+</body>
+
+</html>

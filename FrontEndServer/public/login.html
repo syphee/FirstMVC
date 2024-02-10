@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link href="css/login.css" rel="stylesheet" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    
+    <script>
+        // check if cookie is enabled
+        function checkCookie() {
+            document.cookie = "test=test;";
+            var cookieEnabled = (document.cookie.indexOf("test=") != -1) ? true : false;
+            if (!cookieEnabled) {
+                alert("Cookies are not enabled");
+            } else {
+                alert("Cookies are enabled");
+            }
+        }
+    </script>
+
+    <script>
+        
+        $(document).ready(function () {
+
+            // Log as guest
+            $('#Guest').click(function(){
+                alert(`Logging in as guest..`)
+                window.location.assign('http://localhost:3001/home.html')
+                return false
+            })
+            // refer to id #Login
+            $('#Login').click(function () {
+
+
+                // build data in request body
+                //var data = "{\"email\":\"" + id + "\",\"password\":\"" + pwd + "\"}"
+
+                //do dataObj instead of top ^
+                const id = $('#email').val()
+                const pwd = $('#pwd').val()
+
+                const dataObj = {
+                    "email": id,
+                    "password": pwd
+                }
+
+                const data = JSON.stringify(dataObj)
+
+                alert(`Logging in with email :${id} and password : ${pwd}`)
+
+
+                // SEND HTTP REQ 
+                $.ajax({
+                    url: 'http://localhost:8081/user/login',
+                    type: 'POST',
+                    data: data,
+                    contentType: 'application/json;charset=utf-8',
+                    dataType: 'json',
+                    
+
+                    success: function (data, textStatus, xhr) {
+                        console.log(`Server : ${JSON.stringify(data)}`)
+                        alert('success')
+                        console.log(`Data:${data}`)
+                        console.log(`xhr : ${xhr}`)
+
+                        if (data != null) {
+                            //store token and user data in local storage
+                            localStorage.setItem('token', data.token)
+                            localStorage.setItem('userInfo', data.UserData)
+
+                            // Instead of using local storage, implement cookies for more security
+
+                            //set cookies
+                            // Cookies.set("token", data.token, {
+                            //     expires: 1, // 1 day expiration time
+                            //     secure: true, // only send the cookie over HTTPS
+                            //     sameSite: "strict",
+                            //     httpOnly: true
+                            // });
+
+                            // // set user data
+                            // Cookies.set("userInfo", data.UserData, {
+                            //     expires: 1, // 1 day expiration time
+                            //     secure: true, // only send the cookie over HTTPS
+                            //     sameSite: "strict",
+                            //     httpOnly: true
+                            // });
+
+
+                            // redirect to profile
+                            window.location.assign('http://localhost:3001/home.html')
+
+                        }
+                        console.log(JSON.stringify(data))
+                        console.log(textStatus)
+                        console.log(JSON.stringify(xhr))
+                    },
+
+                    error: function (xhr, textStatus, errorThrown) {
+                        alert('error')
+                        console.log("Error in operation")
+                        // alert(JSON.stringify(data))
+                        // alert(textStatus)
+                        // alert(JSON.stringify(xhr))
+                    }
+                })
+
+                return false // prevents page from reloading
+
+
+            })
+        })
+
+    </script>
+
+
+</head>
+
+<body onload="checkCookie()">
+
+    <div class="login-form">
+        <!--<form action="http://localhost:3001/profile.html"> -->
+        <form action="">
+            <h2 class="text-center">Log in</h2>
+            <div class="form-group">
+                <input type="text" class="form-control" id="email" placeholder="Email" required="required">
+            </div>
+            <div class="form-group">
+                <input type="password" class="form-control" id="pwd" placeholder="Password" required="required">
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-block" id="Login">Log in</button>
+            </div>
+            <div class="clearfix">
+                <label class="pull-left checkbox-inline"><input type="checkbox"> Remember me</label>
+                <a href="#" class="pull-right">Forgot Password?</a>
+            </div>
+            <hr>
+            <div class="clearfix">
+                
+                <button type="submit" href="#" class=" btn btn-primary btn-block pull-right" id="Guest">Login As Guest</a>
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>

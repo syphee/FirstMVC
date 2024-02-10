@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="css/profile.css" rel="stylesheet" />
+    <title>Search Results</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+
+    <script>
+        $(document).ready(function () {
+
+            if (localStorage.getItem('cart') == null) {
+                alert("You do not have anything in your cart!")
+                window.location.assign('http://localhost:3001/home.html')
+
+            } else {
+                const titleQuery = localStorage.getItem('cart')
+                const cart = JSON.parse(titleQuery)
+
+                let divOuput = ''
+                let priceOutput = 0;
+                for (var i = 0; i < titleQuery.length; i++) {
+
+                    $.ajax({
+                        url: `http://localhost:8081/film/search/`,
+                        type: 'GET',
+                        data: {
+                            title: cart[i]
+                        },
+                        dataType: 'json',
+                        success: function (data, textStatus, xhr) {
+
+                            console.log(JSON.stringify(data))
+                            console.log(JSON.stringify(data))
+
+
+                            if (data != 'null') {
+
+                                for (let i = 0; i < data.length; i++) {
+                                    console.log(data[i].pic)
+                                    totalPrice += data[i].rental_rate
+
+                                    divOuput += `
+                            <div class="card" style="margin-top: 2rem;">
+                                    <div class="card-body">
+                                        <p class="card-text">${data[i].title}</p>
+                                    </div>
+
+                                    <div class="card-footer text-muted">
+                                        <div class="row">
+                                            
+
+                                            <div class="col">
+                                                Price
+                                                <div class="col">
+                                                ${data[i].rental_rate}
+                                                </div>
+                                            </div>
+
+                                            
+
+
+                                        </div>
+                                        
+                                    </div>
+
+                                
+                                </div>
+                                `
+
+                                }
+
+
+
+                                $('#posts').html(divOuput)
+
+                                // another AJAX call to put all actors.
+                                // This is done incase film has no actor.
+
+                                $.ajax({
+                                    url: `http://localhost:8081/film/search/actors`,
+                                    type: 'GET',
+                                    data: {
+                                        title: titleQuery
+                                    },
+                                    dataType: 'json',
+                                    success: function (data, textStatus, xhr) {
+
+                                        let divOuput = ''
+                                        if (data != 'null') {
+
+
+                                            var arrayOfActors = []
+                                            for (let i = 0; i < data.length; i++) {
+                                                var first_name = data[i].first_name
+                                                var last_name = data[i].last_name
+
+                                                var full_name = first_name + " " + last_name
+                                                arrayOfActors.push(full_name)
+
+                                            }
+                                            divOuput += `<div>${arrayOfActors.toString()}</div>`
+                                        }
+                                        $('#actors').html(divOuput)
+
+
+                                    },
+                                    error: function (xhr, textStatus, error) {
+                                        console.log('Error in Operation')
+                                    }
+                                })
+                            }
+
+
+                            for (let i = 0; i < data.length; i++) {
+                                console.log(typeof (data[i].rental_rate))
+                                priceOutput += data[i].rental_rate
+                            }
+
+                            output = `
+                        <div id="cartPrice">Total price : $${priceOutput}</div>
+                        `
+
+                            $('#totalPrice').html(output)
+
+                        },
+
+
+                        error: function (xhr, textStatus, error) {
+                            console.log('Error in Operation')
+                        }
+                    })
+                }
+
+            }
+
+
+
+            $('#SearchDVDBtn').click(function () {
+
+                window.location.assign('http://localhost:3001/home.html')
+            })
+
+            $('#RemoveAllDVD').click(function () {
+                if (localStorage.getItem('cart') == null) {
+                    alert("You do not have anything in your cart!")
+                } else {
+                    localStorage.removeItem('cart')
+                    alert("Clearing cart...")
+                    window.location.assign('http://localhost:3001/MyCart.html')
+                }
+
+                return false
+            })
+
+            $('#Payment').click(function () {
+
+
+
+                if (localStorage.getItem('cart') == null) {
+                    alert("You do not have anything in your cart!")
+                } else {
+                    var price = $("#totalPrice").text()
+                    alert(`${price} Has been charged in your account. Thank you for using Sakila.`)
+                    localStorage.removeItem('cart')
+                    alert("Clearing cart...")
+                    window.location.assign('http://localhost:3001/MyCart.html')
+                }
+
+            })
+        })
+    </script>
+</head>
+
+<body style="
+background-image: url('https://mdbcdn.b-cdn.net/img/Photos/Others/images/76.webp');
+
+background-repeat: no-repeat;
+  background-attachment: fixed;  
+  background-size: cover;
+">
+    <header class="header" class="sticky-top">
+
+        Sakila DVD Database System
+        <div class="container">
+            <div class="row">
+                <div class="col ">
+                    <button id="Logout">Log out</button>
+                </div>
+
+                <div class="col  border-bottom border-primary">
+                    <button id="SearchDVDBtn">Search DVD</button>
+                </div>
+
+                <div class="col ">
+                    <button id="">My cart</button>
+                </div>
+                <!-- <div class="form-floating col">
+                <textarea class="form-control" placeholder="Search" id="floatingTextarea"></textarea>
+                <label for="floatingTextarea">Comments</label>
+              </div> -->
+
+            </div>
+
+        </div>
+    </header>
+
+
+
+    <div class="container card">
+        <h1 class="mt-5">My Cart</h1>
+
+
+        <div class="row ">
+            <div id="posts" class="row">
+
+
+            </div>
+            <div id="totalPrice">
+
+            </div>
+            <button id="RemoveAllDVD">Remove all items</button>
+
+        </div>
+
+
+
+        <div class="row ">
+            <button id="Payment">Pay</button>
+        </div>
+    </div>
+
+
+
+</body>
+
+</html>

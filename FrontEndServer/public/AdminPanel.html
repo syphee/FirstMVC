@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="css/profile.css" rel="stylesheet" />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <script>
+        $(document).ready(function () {
+            
+            
+            
+            $('.card').hide()
+            $('#ViewAddActor').hide()
+            $('#ViewAddCustomer').hide()
+            $('#ViewAddDVD').hide()
+
+            $.ajax({
+                url: 'http://localhost:8081/film/categories',
+                type: 'GET',
+
+                success: function (data, textStatus, xhr) {
+                    console.log(`Server : ${JSON.stringify(data)}`)
+                    console.log(data)
+                    if (data != 'null') {
+
+                        console.log(JSON.stringify(data))
+
+
+
+                        let divOuput = ''
+                        divOuput += `<option selected></option>`
+                        for (let i = 0; i < data.length; i++) {
+                            divOuput += `<option value=\"${i + 1}\">${data[i].name}<option>`
+                        }
+
+
+
+                        $('#DVDCatSelect').html(divOuput)
+                    }
+
+                },
+                error: function (xhr, textStatus, error) {
+                    alert("Get Categories failed")
+                    console.log('Error in Operation')
+                }
+            })
+
+            // add actor
+            $(document).on('click', '#AddActor', function () {
+                $('#ViewAddActor').slideToggle()
+                if ($('#ViewAddCustomer').is(':visible') == true) {
+                    $('#ViewAddCustomer').hide()
+                }
+                if ($('#ViewAddDVD').is(':visible') == true) {
+                    $('#ViewAddDVD').hide()
+                }
+            })
+
+            // add customer
+            $(document).on('click', '#AddCustomer', function () {
+                $('#ViewAddCustomer').slideToggle()
+                if ($('#ViewAddActor').is(':visible') == true) {
+                    $('#ViewAddActor').hide()
+                }
+                if ($('#ViewAddDVD').is(':visible') == true) {
+                    $('#ViewAddDVD').hide()
+                }
+            })
+
+            // add dvd
+            $(document).on('click', '#AddDVD', function () {
+                $('#ViewAddDVD').slideToggle()
+                if ($('#ViewAddActor').is(':visible') == true) {
+                    $('#ViewAddActor').hide()
+                }
+                if ($('#ViewAddCustomer').is(':visible') == true) {
+                    $('#ViewAddCustomer').hide()
+                }
+            })
+
+
+            $(document).on('click', '#ViewAccount', function () {
+                $('.card').slideToggle()
+                if ($('#ViewAddActor').is(':visible') == true) {
+                    $('#ViewAddActor').hide()
+                }
+                if ($('#ViewAddCustomer').is(':visible') == true) {
+                    $('#ViewAddCustomer').hide()
+                }
+                if ($('#ViewAddDVD').is(':visible') == true) {
+                    $('#ViewAddDVD').hide()
+                }
+            })
+
+            // populate user info into the form
+
+            // get user info from localStorage
+
+            const UserData = localStorage.getItem('userInfo')
+
+
+            // convert userinfo to json format
+            const userJsonData = JSON.parse(UserData)
+
+            // populate userjsondata into the account details
+            $('#username').val(userJsonData[0].username)
+            $('#email').val(userJsonData[0].email)
+            $('#role').val(userJsonData[0].role)
+            $('#profilepic').attr('src', 'image/' + userJsonData[0].pic)
+
+            //handle the click event of Update Button
+            $(document).on('click', '#Update', function () {
+                // retrieve values from textbox
+
+                const tmpUsername = $('#username').val()
+                const tmpEmail = $('#email').val()
+                const tmpRole = $('#role').val()
+
+                // retrieve token from localStorage
+                const tmpToken = localStorage.getItem('token')
+
+                alert(tmpToken)
+
+                const dataObj = {
+                    username: tmpUsername,
+                    email: tmpEmail,
+                    role: tmpRole
+
+                }
+
+                const data = JSON.stringify(dataObj)
+
+                alert(data)
+                // send put req
+                $.ajax({
+                    headers: { 'authorization': 'Bearer ' + tmpToken },
+                    url: 'http://localhost:8081/user',
+                    type: 'PUT',
+                    data: data,
+                    contentType: 'application/json;charset=utf-8',
+                    dataType: 'json',
+
+                    success: function (data, textStatus, xhr) {
+                        alert('success')
+                        if (data != null) {
+                            $('#msg').html('Record updated successfully.')
+
+                        } else {
+                            $('#msg').html('Record not successfully.')
+
+                        }
+                        // alert(JSON.stringify(data))
+                        // alert(textStatus)
+                        // alert(JSON.stringify(xhr))
+                    },
+
+                    error: function (xhr, textStatus, errorThrown) {
+                        alert('error')
+                        console.log("Error in operation")
+                        // alert(JSON.stringify(data))
+                        // alert(textStatus)
+                        // alert(JSON.stringify(xhr))
+                    }
+                })
+
+                return false // prevents page from reloading
+
+
+
+            })
+
+            $(document).on('click', '#AddActorBtn', function () {
+                // retrieve values from textbox
+
+                const tmpFirstName = $('#ActorFirstName').val()
+                const tmpLastName = $('#ActorLastName').val()
+
+
+                // retrieve token from localStorage
+                const tmpToken = localStorage.getItem('token')
+
+                
+
+                const dataObj = {
+                    first_name: tmpFirstName,
+                    last_name: tmpLastName
+
+                }
+
+                const data = JSON.stringify(dataObj)
+
+                alert(data)
+                // send put req
+                $.ajax({
+                    headers: { 'authorization': 'Bearer ' + tmpToken },
+                    url: 'http://localhost:8081/actors',
+                    type: 'POST',
+                    data: data,
+                    contentType: 'application/json;charset=utf-8',
+                    dataType: 'json',
+
+                    success: function (data, textStatus, xhr) {
+                        alert('success')
+
+                        // alert(JSON.stringify(data))
+                        // alert(textStatus)
+                        // alert(JSON.stringify(xhr))
+                    },
+
+                    error: function (xhr, textStatus, errorThrown) {
+                        alert('error')
+                        console.log("Error in operation")
+                        console.log(errorThrown)
+                        // alert(JSON.stringify(data))
+                        // alert(textStatus)
+                        // alert(JSON.stringify(xhr))
+                    }
+                })
+
+                return false // prevents page from reloading
+
+
+
+            })
+            $(document).on('click', '#AddCustomerBtn', function () {
+                // retrieve values from textbox
+
+                const store_id = parseInt($('#CustomerStore_id').val())
+                const first_name = $('#CustomerFirstName').val()
+                const last_name = $('#CustomerLastName').val()
+                const email = $('#CustomerMail').val()
+                const address = $('#CustomerAddress').val()
+                //address.address_line1, address.address_line2, address.district, address.city_id, address.postal_code, address.phone
+                const address_line1 = $('#address_line1').val()
+                const address_line2 = $('#address_line2').val()
+                const district = $('#addressDistrict').val()
+                const city_id = parseInt($('#addressCity_id').val())
+                const postal_code = parseInt($('#addressPostal_code').val())
+                const phone = parseInt($('#addressPhone').val()) 
+
+                
+
+                // retrieve token from localStorage
+                const tmpToken = localStorage.getItem('token')
+
+               console.log(tmpToken)
+
+                const dataObj = {
+                    store_id :store_id,
+                    first_name: first_name,
+                    last_name :last_name,
+                    email :email,
+                    address : {
+                        address_line1 :address_line1,
+                        address_line2 :address_line2,
+                        district :district,
+                        city_id :city_id,
+                        postal_code :postal_code,
+                        phone:phone
+                    }
+                }
+
+                const data = JSON.stringify(dataObj)
+
+
+                // Validation
+                var hasValidated = false;
+
+                if(Number.isInteger(store_id)&& first_name.trim() !== "" && last_name.trim() !== "" && email.trim() !== "" && email.includes("@") && (email.includes(".com") || email.includes(".net") || email.includes(".org"))
+                && address_line1.trim() !=="" && district.trim() !=="" && Number.isInteger(city_id) && Number.isInteger(postal_code) && Number.isInteger(phone)) {
+                    hasValidated = true
+                }
+
+                if(city_id.toString().length > 3 || city_id.toString().length < 1){
+                    alert("City ID Can only be of 2 to 3 digits. Please try again.")
+                    hasValidated = false
+                }
+
+                if(postal_code.toString().length > 5 || postal_code.toString().length < 4 ){
+                    alert("Postal code can only be of 4 to 5 digits. Please try again.")
+                    hasValidated = false
+                }
+                
+
+                console.log(data)
+                // send put req
+                if(hasValidated == true){
+                $.ajax({
+                    headers: { 'authorization': 'Bearer ' + tmpToken },
+                    url: 'http://localhost:8081/customers',
+                    type: 'POST',
+                    data: data,
+                    contentType: 'application/json;charset=utf-8',
+                    dataType: 'json',
+
+                    success: function (data, textStatus, xhr) {
+                        alert('success')
+
+                        console.log(JSON.stringify(data))
+                        console.log(textStatus)
+                        console.log(JSON.stringify(xhr))
+                    },
+
+
+                    error: function (xhr, textStatus, errorThrown) {
+
+                        // if email already exists in database
+                        if(errorThrown == "Conflict"){
+                            alert("Email already exists in the database.")
+                        }
+                        
+
+                        alert('error')
+                        console.log("Error in operation")
+                        // alert(JSON.stringify(data))
+                        // alert(textStatus)
+                        // alert(JSON.stringify(xhr))
+                    }
+                })
+                }else{
+                    alert("Missing fields or incorrect inputs.. Please try again.")
+                }
+
+                return false // prevents page from reloading
+
+
+
+            })
+            // reroutes
+
+            //logout
+            $(document).on('click', '#Logout', function () {
+                alert("Logging Out..")
+                window.localStorage.clear()
+                window.location.assign('http://localhost:3001/login.html')
+            })
+
+            // go to my account
+            $(document).on('click', '#MyAccountBtn', function () {
+                $('.card').slideToggle()
+            })
+
+            $(document).on('click', '#SearchDVDBtn', function () {
+                alert("Redirecting to Search DVD...")
+                window.location.assign('http://localhost:3001/home.html')
+            })
+
+            
+            // needs delegation
+            // $("#ViewDVD").click(function () {
+            //     var title = $(this).siblings(".card-body").find("#dataTitle").text();
+
+            //     alert(`Stored search query for : ${title}`)
+            //     localStorage.setItem("dvdTitle", title);
+            // });
+
+
+            $(document).on('click', '#AdminPanel', function () {
+                const CurrentUserInfo = localStorage.getItem("userInfo")
+
+                const userJsonData = JSON.parse(CurrentUserInfo)
+
+                console.log(JSON.stringify(userJsonData))
+                console.log(`Current user's role: ${JSON.stringify(userJsonData)}`)
+
+                if (userJsonData[0].role == "admin") {
+                    alert(`Welcome back, ${userJsonData[0].first_name} ${userJsonData[0].last_name}`)
+                    window.location.assign('http://localhost:3001/AdminPanel.html')
+                } else {
+                    alert("You have no permission to access the admin panel!")
+                }
+            })
+
+            // Add new film
+            $(document).on('click','#AddFilmBtn',function () {
+
+                event.preventDefault();
+
+                
+
+                
+                
+
+                // build data in request body
+                //var data = "{\"email\":\"" + id + "\",\"password\":\"" + pwd + "\"}"
+
+                //do dataObj instead of top ^
+                const title = $('#titleInput').val().toUpperCase()
+
+
+                const description = $('#descriptionInput').val()
+                const release_year = $('#release_yearInput').val()
+                const language_id = $('#language_idInput').val()
+                const rental_duration = $('#rental_durationInput').val()
+                const rental_rate = $('#rental_rateInput').val()
+                const length = $('#lengthInput').val()
+                const replacement_cost = $('#replacement_costInput').val()
+                const rating = $('#DVDRating').find(":selected").text()
+                const special_features = $('#DVDSpecialSelect').find(":selected").text()
+                const category_name = $('#DVDCatSelect').find(":selected").text();
+                // format img as key
+                const formData = new FormData();
+                
+                formData.append('title', title);
+                formData.append('description', description);
+                formData.append('release_year', release_year);
+                formData.append('language_id', language_id);
+                formData.append('rental_duration', rental_duration);
+                formData.append('rental_rate', rental_rate);
+                formData.append('length', length);
+                formData.append('replacement_cost', replacement_cost);
+                formData.append('rating', rating);
+                formData.append('special_features', special_features);
+                formData.append('category_name', category_name);
+                formData.append('image', $('#image')[0].files[0]);
+
+                console.log(formData.get('image'))
+
+                const uploadedIMG = formData.get('image').name
+                console.log(uploadedIMG)
+
+                const tmpToken = localStorage.getItem('token')
+                
+                // const dataObj = {
+                //     "title": title,
+                //     "description": description,
+                //     "release_year": release_year,
+                //     "language_id": language_id,
+                //     "rental_duration": rental_duration,
+                //     "rental_rate": rental_rate,
+                //     "length": length,
+                //     "replacement_cost": replacement_cost,
+                //     "rating": rating,
+                //     "special_features": special_features,
+                //     "category_name": category_name,
+                //     "pic":formData.get('image')
+                // }
+
+                //const data = JSON.stringify(dataObj)
+
+                // SEND HTTP REQ 
+                $.ajax({
+                    headers: { 'authorization': 'Bearer ' + tmpToken },
+                    url: 'http://localhost:8081/film',
+                    type: 'POST',
+                    data: formData,
+                    contentType: 'application/json;charset=utf-8',
+                    dataType: 'json',
+                    processData: false,
+                    contentType: false,
+                    
+
+
+
+                    success: function (data, textStatus, xhr) {
+                        console.log(`Server : ${JSON.stringify(data)}`)
+                        console.log('success')
+                        console.log(`Data:${data}`)
+                        console.log(`xhr : ${xhr}`)
+
+                        console.log(JSON.stringify(data))
+                        
+                    },
+
+                    error: function (xhr, textStatus, errorThrown) {
+                        alert('Error')
+                        console.log("Error in operation")
+                        console.log(errorThrown)
+                        // alert(JSON.stringify(data))
+                        // alert(textStatus)
+                        // alert(JSON.stringify(xhr))
+                    }
+                })
+
+        
+
+
+            })
+        })
+
+    </script>
+
+    <script>
+        $(document).ready(function (){
+            if(localStorage.getItem("userInfo")===null){
+                alert("You have no permission to access the admin panel!")
+                $('#Control').hide()
+            }else{
+            const CurrentUserInfo = localStorage.getItem("userInfo")
+
+            userJsonData = JSON.parse(CurrentUserInfo)
+
+            console.log(JSON.stringify(userJsonData))
+            console.log(`Current user's role: ${JSON.stringify(userJsonData)}`)
+
+            if(userJsonData[0].role !== "admin"){
+                alert("You have no permission to access the admin panel!")
+                $('#Control').hide()
+            }
+        }
+        })
+    </script>
+
+
+</head>
+
+
+<body style="
+background-image: url('https://mdbcdn.b-cdn.net/img/Photos/Others/images/76.webp');
+
+background-repeat: no-repeat;
+  background-attachment: fixed;  
+  background-size: cover;
+">
+
+    <header class="header" class="sticky-top">
+
+        Sakila DVD Database System
+        <div class="container">
+            <div class="row">
+                <div class="col ">
+                    <button id="Logout">Log out</button>
+                </div>
+
+                <div class="col ">
+                    <button id="SearchDVDBtn">Search DVD</button>
+                </div>
+
+                <div class="col  border-bottom border-primary">
+                    <button id="AdminPanel">AdminPanel</button>
+                </div>
+
+                <div class="col ">
+                    <button id="ViewAccount">My Account</button>
+                </div>
+                <!-- <div class="form-floating col">
+                    <textarea class="form-control" placeholder="Search" id="floatingTextarea"></textarea>
+                    <label for="floatingTextarea">Comments</label>
+                  </div> -->
+
+            </div>
+
+        </div>
+    </header>
+
+
+
+
+
+
+
+
+    <div class="container mt-5" id="Control">
+
+        <!-- Account Details -->
+        <div class="card row col-lg-2 position-absolute">
+            <img src="http://localhost:3001/image/pic.jpg" id="profilepic" alt="Profile" style="width:100%">
+
+
+            <div class="container">
+                <div class="col">
+                    <p class="username row"> <label>Username: </label>
+                        <input type="text" id="username"> </br>
+                    </p>
+                    <p class="role row"><label>Job role: </label>
+                        <input type="text" id="role"> </br>
+                    </p>
+
+                    <p class="email row"><label>Email: </label>
+                        <input type="text" id="email">
+                    </p>
+
+                    <div class="row padding pb-3">
+                        <p><span id="msg"></span></p>
+                        <a href="#" class="col"><i class="fa fa-dribbble"></i></a>
+                        <a href="#" class="col"><i class="fa fa-twitter"></i></a>
+                        <a href="#" class="col"><i class="fa fa-linkedin"></i></a>
+                        <a href="#" class="col"><i class="fa fa-facebook"></i></a>
+
+                    </div>
+
+                    <p><input type="button" id="Update" class="row" value="Update Profile" /></p>
+                    <p><input type="button" id="Logout" class="row" value="Log Out" /></p>
+
+                </div>
+
+
+
+
+            </div>
+
+
+
+        </div>
+
+
+
+
+        <div class="row">
+
+            <div class="col ">
+                <button id="AddActor">Add New Actor</button>
+            </div>
+
+            <div class="col">
+                <button id="AddCustomer">Add New Customer</button>
+            </div>
+
+            <div class="col">
+                <button id="AddDVD">Add New Film</button>
+            </div>
+
+        </div>
+
+        <div class="row">
+            <div id="ViewAddActor" class="card">
+                <h1>Add New Actor</h1>
+                <div class="row">
+
+                    <div class="p-2">
+                        <p class="mt-2">Actor's first name</p>
+                        <input type="text" placeholder="First name" class="mt-2" id="ActorFirstName">
+                        
+                    </div>
+
+                    <div class="p-2">
+                        <p class="mt-2">Actor's last name</p>
+                        <input type="text" placeholder="Last name" class="mt-2" id="ActorLastName">
+                    </div>
+
+
+                </div>
+
+                <div class=" p-2 mt-3">
+
+                    <button class="btn-sm btn btn-primary" type="button" id="AddActorBtn">Add Actor</button>
+                </div>
+
+            </div>
+
+            <div id="ViewAddCustomer" class="card">
+                
+                <div class="row">
+                    <h1>Add New Customer</h1>
+                    <div class="col">
+                    <h3>Personal Details</h3>
+                    <div class="p-2">
+                        <p class="mt-2">First name</p>
+                        <input type="text" placeholder="First name" class="mt-2" id="CustomerFirstName">
+                        
+                    </div>
+
+                    <div class="p-2">
+                        <p class="mt-2">Last name</p>
+                        <input type="text" placeholder="Last name" class="mt-2" id="CustomerLastName">
+                    </div>
+
+                    <div class="p-2">
+                        <p class="mt-2">Email</p>
+                        <input type="text" placeholder="Email" class="mt-2" id="CustomerMail">
+                    </div>
+
+                    <h3>Store ID</h3>
+                    <div class="p-2">
+                        <p class="mt-2">Store ID</p>
+                        <input type="text" placeholder="Store ID" class="mt-2" id="CustomerStore_id">
+                    </div>
+
+                    </div>
+                    
+                    <div class="col">
+                        <h3>Address</h3>
+                        <div class="p-2">
+                            <p class="mt-2">Address 1</p>
+                            <input type="text" placeholder="Address 1" class="mt-2" id="address_line1">
+                            
+                        </div>
+    
+                        <div class="p-2">
+                            <p class="mt-2">Address 2</p>
+                            <input type="text" placeholder="Address 2" class="mt-2" id="address_line2">
+                        </div>
+    
+                        <div class="p-2">
+                            <p class="mt-2">District</p>
+                            <input type="text" placeholder="District" class="mt-2" id="addressDistrict">
+                        </div>
+    
+                        <div class="p-2">
+                            <p class="mt-2">City ID</p>
+                            <input type="text" placeholder="City ID" class="mt-2" id="addressCity_id">
+                        </div>
+
+                        <div class="p-2">
+                            <p class="mt-2">Postal Code</p>
+                            <input type="text" placeholder="Postal Code" class="mt-2" id="addressPostal_code">
+                        </div>
+
+                        <div class="p-2">
+                            <p class="mt-2">Phone</p>
+                            <input type="text" placeholder="Phone" class="mt-2" id="addressPhone">
+                        </div>
+
+                        </div>
+                    
+
+
+                </div>
+
+                <div class=" p-2 mt-3">
+
+                    <button class="btn-sm btn btn-primary" type="button" id="AddCustomerBtn">Add Customer</button>
+                </div>
+            </div>
+
+            <div id="ViewAddDVD" class="card">
+                
+                <div class="row">
+                    <h1>Add New Film</h1>
+                    <div class="col">
+
+                    <div class="p-2">
+                        <p class="mt-2">Title</p>
+                        <input type="text" placeholder="title" class="mt-2" id="titleInput">
+                        
+                    </div>
+
+                    <div class="p-2">
+                        <p class="mt-2">Description</p>
+                        <input type="text" placeholder="Last name" class="mt-2" id="descriptionInput">
+                    </div>
+
+                    <div class="p-2">
+                        <p class="mt-2">Release Year</p>
+                        <input type="text" placeholder="Last name" class="mt-2" id="release_yearInput">
+                    </div>
+
+                    <h3>Upload DVD Image</h3>
+                    <form id="upload-form">
+                        <input type="file" id="image" name="image" />
+                        
+                    </form>
+
+
+
+
+                    <h3>Store ID</h3>
+                    <div class="p-2">
+                        <p class="mt-2">Language ID</p>
+                        <input type="text" placeholder="Last name" class="mt-2" id="language_idInput">
+                    </div>
+
+                    </div>
+                    
+                    <div class="col">
+                        <div class="p-2">
+                            <p class="mt-2">Rental Duration</p>
+                            <input type="text" placeholder="First name" class="mt-2" id="rental_durationInput">
+                            
+                        </div>
+    
+                        <div class="p-2">
+                            <p class="mt-2">Rental Rate</p>
+                            <input type="text" placeholder="Last name" class="mt-2" id="rental_rateInput">
+                        </div>
+    
+                        <div class="p-2">
+                            <p class="mt-2">Length of film</p>
+                            <input type="text" placeholder="Last name" class="mt-2" id="lengthInput">
+                        </div>
+    
+                        <div class="p-2">
+                            <p class="mt-2">Replacement Cost</p>
+                            <input type="text" placeholder="Last name" class="mt-2" id="replacement_costInput">
+                        </div>
+
+                        <div class="p-2">
+                            <p class="mt-2">Rating</p>
+                            
+                            <select class="form-select" id="DVDRating" aria-label="Floating label select example">
+
+                                <option selected>Please Select</option>
+                                <option value="1">G</option>
+                                <option value="2">PG</option>
+                                <option value="3">PG-13</option> 
+                                <option value="4">R</option> 
+                                <option value="5">NC-17</option> 
+        
+                            </select>
+                        </div>
+
+                        <div class="p-2">
+                            <p class="mt-2">Special Features</p>
+                            
+                            <select class="form-select" id="DVDSpecialSelect" aria-label="Floating label select example">
+
+                                <option selected>Please Select</option>
+                                <option value="1">Trailers</option>
+                                <option value="2">Commentaries</option>
+                                <option value="3">Deleted Scenes</option> 
+                                <option value="4">Behind the Scenes</option> 
+        
+                            </select>
+                        </div>
+
+                        <div class="p-2">
+                            <p class="mt-2">Category</p>
+                            <select class="form-select" id="DVDCatSelect" aria-label="Floating label select example">
+
+
+                            </select>
+                        </div>
+
+                        
+
+                        </div>
+                    
+
+
+                </div>
+
+                <div class=" p-2 mt-3">
+
+                    <button class="btn-sm btn btn-primary" type="button" id="AddFilmBtn">Add Film</button>
+                </div>
+            </div>
+
+
+        </div>
+
+
+
+    </div>
+
+
+
+
+
+</body>
+
+</html>
